@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errStr = 'JAVASCRIPT ERROR:\n' + message + '\nat ' + source + ':' + lineno + ':' + colno + '\n' + (error ? error.stack : '');
+            alert(errStr);
+            return false;
+        };
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kagegahara: Crônicas do Eclipse</title>
+    <!-- Google Fonts: Jura e Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jura:wght@400;700&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/glassmorphism.css">
+    <link rel="stylesheet" href="styles/visual_novel.css">
+</head>
+<body class="theme-dark">
+    <!-- VIEWPORT CINEMATOGRÁFICO DE TELA INTEIRA -->
+    <div id="game-viewport" class="game-viewport">
+        <!-- CENÁRIO DILATADO (LAYER 1) -->
+        <div id="vn-background" class="vn-bg forest_red"></div>
+        
+        <!-- FLUIDO DE CLIMA (LAYER 1.5) -->
+        <div id="weather-overlay" class="weather-rain"></div>
+
+        <!-- NPC SPRITE DE MEIO CORPO (LAYER 1.8) -->
+        <div class="vn-character-container">
+            <img id="vn-character-portrait" class="vn-portrait-img" src="assets/yusei_neutral.jpg" alt="Personagem Ativo">
+        </div>
+
+        <!-- CABEÇALHO MINIMALISTA (LAYER 2) -->
+        <header class="app-header">
+            <h1 class="logo">KAGEGAHARA<span>CRÔNICAS DO ECLIPSE</span></h1>
+            <button id="btn-toggle-menu" class="btn btn-menu" title="Ficha do Shinobi">
+                ☰
+            </button>
+        </header>
+
+        <!-- TELA DE TÍTULO / MENU PRINCIPAL -->
+        <section id="screen-title" class="screen active title-screen-overlay">
+            <div class="title-bg"></div>
+            <div class="title-container">
+                <h1 class="game-title">KAGEGAHARA</h1>
+                <span class="game-subtitle">CRÔNICAS DO ECLIPSE</span>
+                
+                <div class="menu-options">
+                    <button id="btn-new-game" class="btn btn-primary menu-btn">Novo Jogo</button>
+                    <button id="btn-continue-game" class="btn btn-secondary menu-btn" disabled>Continuar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA DE PRÓLOGO HISTÓRICO (INTRODUÇÃO) -->
+        <section id="screen-intro" class="screen intro-overlay">
+            <div id="intro-bg" class="intro-bg-slide"></div>
+            <div class="intro-content glass-panel">
+                <span class="intro-tag">LORE E CRÔNICAS</span>
+                <p id="intro-text">
+                    Carregando a história de Kagegahara...
+                </p>
+                <div class="intro-controls">
+                    <span class="intro-hint">Clique ou aperte ESPAÇO para continuar</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA DE CRIAÇÃO DE PERSONAGEM (SOBREPOSTA APÓS INTRO) -->
+        <section id="screen-char-creator" class="screen char-creator-overlay glass-panel">
+            <h2>Criar Novo Shinobi</h2>
+            <div class="input-group creator-name-row">
+                <label for="char-name">Nome do Shinobi</label>
+                <input type="text" id="char-name" placeholder="Ex: Kenji" maxlength="16" autocomplete="off">
+            </div>
+            
+            <div class="creator-scroll-container">
+                <div class="creator-columns">
+                    <!-- Clãs -->
+                    <div class="creator-section">
+                        <h3>Escolha seu Clã</h3>
+                        <div class="clan-options">
+                            <div class="clan-card active" data-clan="Shinryu">
+                                <h4>Shinryu</h4>
+                                <p>Olho do Dragão (Tatsugan). Alta percepção e previsão térmica.</p>
+                            </div>
+                            <div class="clan-card" data-clan="Kurogane">
+                                <h4>Kurogane</h4>
+                                <p>Metalurgia de Chakra. Lâminas corporais e resistência física.</p>
+                            </div>
+                            <div class="clan-card" data-clan="Yuki">
+                                <h4>Yuki</h4>
+                                <p>Liberação de Gelo (Hyōton). Alta esquiva e congelamento de chakra.</p>
+                            </div>
+                            <div class="clan-card" data-clan="Raizen">
+                                <h4>Raizen</h4>
+                                <p>Velocidade do Trovão. Bioeletricidade e rapidez de turnos.</p>
+                            </div>
+                            <div class="clan-card" data-clan="Fuma">
+                                <h4>Fuma</h4>
+                                <p>Espaço-Tempo. Selamentos de gravidade e invocações.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Elementos e Antecedentes -->
+                    <div class="creator-section">
+                        <h3>Afinidade Elemental</h3>
+                        <div class="element-options">
+                            <div class="element-card active" data-element="Katon">
+                                <span class="icon">🔥</span> <span class="name">Katon (Fogo)</span>
+                            </div>
+                            <div class="element-card" data-element="Suiton">
+                                <span class="icon">💧</span> <span class="name">Suiton (Água)</span>
+                            </div>
+                            <div class="element-card" data-element="Doton">
+                                <span class="icon">⛰️</span> <span class="name">Doton (Terra)</span>
+                            </div>
+                            <div class="element-card" data-element="Futon">
+                                <span class="icon">💨</span> <span class="name">Futon (Vento)</span>
+                            </div>
+                            <div class="element-card" data-element="Raiton">
+                                <span class="icon">⚡</span> <span class="name">Raiton (Raio)</span>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-top: 20px;">Antecedente Psicológico</h3>
+                        <div class="psych-options">
+                            <div class="psych-card active" data-bg="sobrevivente">
+                                <h4>Sobrevivente de Massacre</h4>
+                                <p>Sua vila foi destruída pelo Círculo. <em>Foco:</em> +5% crítico, mas possui trauma de ansiedade sob perigo.</p>
+                            </div>
+                            <div class="psych-card" data-bg="prodigio">
+                                <h4>Prodígio da Academia</h4>
+                                <p>Sempre nota máxima. <em>Foco:</em> -10% custo de chakra, mas perde moral ao errar rolagens.</p>
+                            </div>
+                            <div class="psych-card" data-bg="exilado">
+                                <h4>Herdeiro Exilado</h4>
+                                <p>Seu clã foi desonrado. <em>Foco:</em> +15% de resistência contra oponentes do mesmo clã.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atributos -->
+                    <div class="creator-section">
+                        <h3>Atributos Iniciais</h3>
+                        <div class="points-pool">
+                            Pontos Restantes: <strong id="remaining-points">10</strong>
+                        </div>
+                        <div class="attributes-list">
+                            <!-- Injetado via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="btn-start-game" class="btn btn-primary btn-large" style="margin-top: 20px;" disabled>
+                Iniciar Jornada Shinobi
+            </button>
+        </section>
+
+        <!-- TELA DE HUD JOGO (LAYER 2) -->
+        <section id="screen-hud" class="screen">
+            <!-- CAIXA DE DIÁLOGO FLOATING (RODAPÉ) -->
+            <div class="vn-dialogue-box glass-panel">
+                <div class="dialogue-header">
+                    <strong id="vn-speaker-name">Mestre Yusei</strong>
+                    <span id="vn-speaker-emotion" class="speaker-state">Preocupado</span>
+                </div>
+
+                <div class="dialogue-body">
+                    <p id="vn-dialogue-text" class="speech-text">
+                        "Carregando..."
+                    </p>
+                    <p id="vn-narrative-text" class="narration-text">
+                        Aguardando...
+                    </p>
+                </div>
+
+                <!-- PAINEL DE ESCOLHAS COMPACTAS NUMERADAS -->
+                <div id="choices-panel" class="choices-compact-list">
+                    <!-- Injetado dinamicamente via JS -->
+                </div>
+
+                <!-- CONSOLE FLUTUANTE DE DIGITAÇÃO DE AÇÃO LIVRE -->
+                <div id="custom-action-container" class="action-console-bar hidden">
+                    <span class="prompt-arrow">&gt;</span>
+                    <input type="text" id="action-input" 
+                           placeholder="Escreva sua ação e aperte Enter..." 
+                           autocomplete="off">
+                    <button id="btn-cancel-action" class="btn btn-secondary btn-small" style="margin-left: 10px;">Voltar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- GAVETA DE STATUS / INVENTÁRIO (LAYER 3) -->
+        <aside id="hud-sidebar-drawer" class="hud-sidebar-drawer glass-panel">
+            <button id="btn-close-drawer" class="btn btn-close-drawer-arrow" title="Fechar Ficha">
+                ➔
+            </button>
+            
+            <div class="drawer-content">
+                <div class="profile-header">
+                    <h2 id="hud-player-name">Kaelen</h2>
+                    <span id="hud-player-level" class="badge">Nível 1</span>
+                </div>
+                <div class="profile-sub">
+                    <span id="hud-player-clan">Clã Shinryu</span>
+                    <span id="hud-player-element" class="badge-element">🔥 Katon</span>
+                </div>
+                
+                <!-- Recursos -->
+                <div class="resources-container">
+                    <div class="resource-bar-group">
+                        <div class="bar-labels">
+                            <span>Vida (PV)</span>
+                            <span id="val-hp">100/100</span>
+                        </div>
+                        <div class="bar-track hp-track">
+                            <div id="bar-hp-fill" class="bar-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-bar-group">
+                        <div class="bar-labels">
+                            <span>Chakra (PC)</span>
+                            <span id="val-mp">75/75</span>
+                        </div>
+                        <div class="bar-track mp-track">
+                            <div id="bar-mp-fill" class="bar-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-bar-group">
+                        <div class="bar-labels">
+                            <span>Sanidade</span>
+                            <span id="val-sanity">100/100</span>
+                        </div>
+                        <div class="bar-track sanity-track">
+                            <div id="bar-sanity-fill" class="bar-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="resource-bar-group">
+                        <div class="bar-labels">
+                            <span>Experiência (XP)</span>
+                            <span id="val-xp">0/150</span>
+                        </div>
+                        <div class="bar-track xp-track">
+                            <div id="bar-xp-fill" class="bar-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Atributos -->
+                <h3>Atributos Shinobi</h3>
+                <div class="attributes-grid" id="hud-attributes-list">
+                    <!-- Injetado via JS -->
+                </div>
+
+                <hr class="divider">
+
+                <!-- Psicologia -->
+                <h3>Psicologia</h3>
+                <div class="psych-section">
+                    <span class="psych-title">Traumas</span>
+                    <div class="tags-container" id="hud-traumas-list"></div>
+                </div>
+                <div class="psych-section" style="margin-top: 10px;">
+                    <span class="psych-title">Convicções</span>
+                    <div class="tags-container" id="hud-convictions-list"></div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Inventário -->
+                <h3>Equipamentos & Itens</h3>
+                <div class="inventory-section" id="hud-inventory-list">
+                    <!-- Lista de itens -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- OVERLAY DE ROLAGEM DE DADOS (MODAL CINEMÁTICO COM DUNGEON MASTER) -->
+        <div id="roll-overlay" class="roll-overlay-container">
+            <div class="roll-modal glass-panel">
+                <img id="roll-dm-portrait" class="roll-dm-img" src="assets/dungeon_master.png" alt="Mestre do Destino">
+                
+                <div class="roll-content-wrapper">
+                    <h2>Teste de Destino Requerido!</h2>
+                    <p id="roll-message">Sua ação envolve incerteza. Role o D20 para definir as consequências.</p>
+                    
+                    <div class="roll-dice-holder">
+                        <div id="roll-dice-visual" class="dice-d20">20</div>
+                    </div>
+                    
+                    <div class="roll-details-box">
+                        <p>Atributo Requerido: <strong id="roll-attr-name">Agilidade</strong></p>
+                        <p>Classe de Dificuldade (CD): <strong id="roll-cd-val">12</strong></p>
+                    </div>
+
+                    <button id="btn-roll-overlay" class="btn btn-primary btn-large">
+                        Rolar D20
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATION BAR -->
+        <div id="notification-bar" class="notification-bar"></div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/app_v3.js?v=3.0"></script>
+</body>
+</html>

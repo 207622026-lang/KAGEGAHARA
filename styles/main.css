@@ -1,0 +1,144 @@
+/* --- VARIÁVEIS DE DESIGN SYSTEM --- */
+:root {
+    /* Cores de Fundo (Tema Escuro Profundo) */
+    --bg-darker: #050608;
+    --bg-dark: #0a0d12;
+    --bg-card: rgba(16, 22, 30, 0.65);
+    --bg-card-hover: rgba(22, 30, 42, 0.85);
+    
+    /* Cores de Destaque */
+    --color-primary: #00d2c4;      /* Azul Chakra clássico */
+    --color-primary-rgb: 0, 210, 196;
+    --color-secondary: #ff3366;    /* Vermelho Carmesim / Trauma */
+    --color-secondary-rgb: 255, 51, 102;
+    --color-success: #33cc66;      /* Verde Sucesso */
+    --color-warning: #ffcc00;      /* Amarelo/Dourado Trovão */
+    --color-text-main: #f0f4f8;    /* Texto principal */
+    --color-text-muted: #8b9bb4;   /* Texto secundário */
+    
+    /* Gradientes */
+    --grad-primary: linear-gradient(135deg, #00d2c4, #007799);
+    --grad-secondary: linear-gradient(135deg, #ff3366, #990033);
+    
+    /* Tipografia */
+    --font-titles: 'Jura', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+    
+    /* Efeitos */
+    --shadow-glow: 0 0 15px rgba(0, 210, 196, 0.35);
+    --shadow-glow-red: 0 0 15px rgba(255, 51, 102, 0.35);
+    --border-radius-s: 6px;
+    --border-radius-m: 12px;
+    --border-radius-l: 20px;
+    --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- RESET GLOBAL --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-darker);
+    color: var(--color-text-main);
+    font-family: var(--font-body);
+    font-weight: 400;
+}
+
+/* Scrollbar Personalizada */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 210, 196, 0.2);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 210, 196, 0.5);
+}
+
+/* --- ESTILOS DE BOTÕES --- */
+.btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text-main);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-s);
+    transition: var(--transition-smooth);
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--grad-primary);
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 210, 196, 0.2);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #00ebd9, #008eb7);
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary {
+    background: rgba(0, 210, 196, 0.05);
+    border-color: rgba(0, 210, 196, 0.2);
+    color: var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 210, 196, 0.15);
+}
+
+.btn:disabled {
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.2);
+    border-color: transparent;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-circle {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.1rem;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+    font-family: var(--font-titles);
+    border-radius: var(--border-radius-m);
+}
+
+.divider {
+    border: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 15px 0;
+}
