@@ -203,8 +203,12 @@ const STORY_NODES = {
             { text: "Entrar na Floresta Negra", nextNode: "act2_forest_entry" }
         ],
         processAction: (text, player) => {
-            player.convictions.push("caminho_da_clemencia");
-            player.xp += 50;
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.convictions.push("caminho_da_clemencia");
+                player.xp += 50;
+                return null;
+            }
             return { nextNode: "act2_forest_entry" };
         }
     },
@@ -212,27 +216,231 @@ const STORY_NODES = {
         background: "kaede_gates",
         speaker: "Narrador",
         dialogue: "",
-        narrative: "Seu pé prende em um cabo de arame farpado. O recruta dispara um sinal luminoso de chakra que explode no céu. Você toma um golpe de lança de raspão no braço (Perde 20 PV) antes de conseguir pular a cerca nas sombras.",
+        narrative: "Seu pé prende em um cabo de arame farpado. O som metálico alerta o recruta novato, que entra em pânico e dispara um sinal de chakra no céu. Antes que você consiga se levantar, três soldados veteranos saem da guarita das sombras e caem sobre você com golpes de cacetete e cabos de lança.\n\nVocê luta bravamente, mas um golpe forte na cabeça te faz apagar na lama (Perde 30 PV e ganha trauma 'Ansiedade do Vazio').",
         choices: [
-            { text: "Correr sangrando para a floresta", nextNode: "act2_forest_entry" }
+            { text: "Acordar aprisionado na cela de segurança", nextNode: "prologue_dungeon_entry" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 20);
-            player.traumas.push("ansiedade_do_vazio");
-            return { nextNode: "act2_forest_entry" };
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 30);
+                player.traumas.push("ansiedade_do_vazio");
+                return null;
+            }
+            return { nextNode: "prologue_dungeon_entry" };
         }
     },
     "prologue_recruit_spare": {
         background: "kaede_gates",
         speaker: "Narrador",
         dialogue: "",
-        narrative: "Você ergue as mãos vazias, usando sua lábia cínica de ladrão. O soldado novato hesita, tremendo sob o frio, e decide aceitar seu suborno de shurikens em silêncio, fingindo não ver sua passagem.\n\n— Vá embora... antes que os oficiais venham — sussurra o rapaz.",
+        narrative: "Você ergue as mãos vazias e tenta subornar o recruta novato com shurikens e moedas de mercado negro, usando sua lábia cínica de criminoso.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "charisma",
+                    cd: 12,
+                    successNode: "prologue_spare_success",
+                    failureNode: "prologue_spare_fail"
+                }
+            };
+        }
+    },
+    "prologue_spare_success": {
+        background: "kaede_gates",
+        speaker: "Mestre Yusei",
+        dialogue: "Vá embora... antes que a patrulha passe.",
+        narrative: "O soldado novato hesita, tremendo sob a chuva ácida. Ele olha para os lados e recolhe o suborno em silêncio, destrancando a grade de ferro para você passar.",
         choices: [
             { text: "Cruzar o portão livre", nextNode: "act2_forest_entry" }
         ],
         processAction: (text, player) => {
-            player.convictions.push("caminho_da_clemencia");
-            player.xp += 30;
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.convictions.push("caminho_da_clemencia");
+                player.xp += 30;
+                return null;
+            }
+            return { nextNode: "act2_forest_entry" };
+        }
+    },
+    "prologue_spare_fail": {
+        background: "kaede_gates",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O jovem soldado se assusta com a sua aproximação. O pânico fala mais alto e ele grita: 'INVASOR!' disparando sua lança contra seu braço (Perde 15 PV) antes que outros guardas te cerquem e te espanquem com cacetetes até desmaiar.",
+        choices: [
+            { text: "Acordar na cela de aprisionamento", nextNode: "prologue_dungeon_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 15);
+                return null;
+            }
+            return { nextNode: "prologue_dungeon_entry" };
+        }
+    },
+    "prologue_dungeon_entry": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você acorda com dor de cabeça e os pulsos algemados em uma cela úmida de ferro sob o portão Kaede. O cheiro de mofo é sufocante. Do lado de fora da grade, um guarda sonolento está lendo relatórios. Seus pertences estão sobre a mesa dele.\n\nVocê precisa escapar antes do amanhecer, quando virão te buscar para execução!",
+        choices: [
+            { text: "Tentar destravar as algemas com um grampo metálico (Agilidade CD 12)", nextNode: "prologue_dungeon_lockpick" },
+            { text: "Mentir fingindo uma convulsão para atrair o guarda (Inteligência CD 11)", nextNode: "prologue_dungeon_provoke" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "prologue_dungeon_lockpick": {
+        background: "temple_interior",
+        narrative: "Você desloca seu polegar dolorosamente (Perde 10 PV) e usa um gancho de ferro que escondeu na sola da bota para destravar a fechadura nas sombras.",
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 10);
+            }
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 12,
+                    successNode: "prologue_dungeon_escape_success",
+                    failureNode: "prologue_dungeon_escape_fail"
+                }
+            };
+        }
+    },
+    "prologue_dungeon_provoke": {
+        background: "temple_interior",
+        narrative: "Você começa a tossir sangue falso e fingir que está morrendo de frio, afirmando que escondeu o ouro roubado perto da grade da guarita.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "intelligence",
+                    cd: 11,
+                    successNode: "prologue_dungeon_trick_success",
+                    failureNode: "prologue_dungeon_trick_fail"
+                }
+            };
+        }
+    },
+    "prologue_dungeon_escape_success": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sucesso! As algemas clicam e se abrem. Você desliza silenciosamente até a grade, passa o braço pelas barras e sufoca o guarda distraído até ele apagar. Você recupera seu equipamento e foge pelos dutos de escoamento de chuva para a Floresta Negra.",
+        choices: [
+            { text: "Correr para a Floresta Negra", nextNode: "act2_forest_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.xp += 60;
+                return null;
+            }
+            return { nextNode: "act2_forest_entry" };
+        }
+    },
+    "prologue_dungeon_escape_fail": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O grampo se deforma na fechadura com um som metálico. O guarda percebe seu movimento, levanta-se bufando e atinge seus dedos através das grades com um bastão de ferro (Perde 15 PV).\n\nCom as mãos feridas, seu tempo está acabando. Você precisa usar outra estratégia!",
+        choices: [
+            { text: "Tentar ludibriar o guarda (Inteligência CD 11)", nextNode: "prologue_dungeon_provoke" },
+            { text: "Puxar a corrente da parede com força física bruta (Força CD 13)", nextNode: "prologue_dungeon_strength_break" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 15);
+                return null;
+            }
+            return null;
+        }
+    },
+    "prologue_dungeon_trick_success": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "A ganância fala mais alto. O guarda abre a cela com as chaves para verificar seu corpo. No instante em que ele se aproxima, você arrebenta as algemas em seu rosto, bate a cabeça dele contra a parede e o nocauteia. Você se equipa e escapa pelas sombras.",
+        choices: [
+            { text: "Fugir para a Floresta Negra", nextNode: "act2_forest_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.xp += 50;
+                return null;
+            }
+            return { nextNode: "act2_forest_entry" };
+        }
+    },
+    "prologue_dungeon_trick_fail": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O guarda ri de escárnio: 'Eu conheço sua fama de ladrão mentiroso, Kenji!' Ele se aproxima com a lança e desfere uma descarga elétrica em suas costelas (Perde 20 PV). \n\nSem tempo, sob o som de passos no corredor, você tenta a força física para arrebentar as correntes!",
+        choices: [
+            { text: "Arrebentar as correntes na força bruta (Força CD 13)", nextNode: "prologue_dungeon_strength_break" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                return null;
+            }
+            return null;
+        }
+    },
+    "prologue_dungeon_strength_break": {
+        background: "temple_interior",
+        narrative: "Você apoia as pernas na parede úmida de rocha, segura os elos e puxa as correntes aplicando toda a força física bruta dos seus braços.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "strength",
+                    cd: 13,
+                    successNode: "prologue_dungeon_escape_brute",
+                    failureNode: "prologue_dungeon_death_gate"
+                }
+            };
+        }
+    },
+    "prologue_dungeon_escape_brute": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Com um grito de raiva, você arranca o pino da rocha! O guarda corre assustado, mas você o enforca com a própria corrente solta. Você recolhe suas coisas e pula pela janela alta de grades soltas direto no rio caudaloso lá fora, nadando até as margens da floresta.",
+        choices: [
+            { text: "Entrar na Floresta Negra", nextNode: "act2_forest_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.xp += 70;
+                return null;
+            }
+            return { nextNode: "act2_forest_entry" };
+        }
+    },
+    "prologue_dungeon_death_gate": {
+        background: "kaede_gates",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "As correntes não cedem. Dois inquisidores da ditadura entram na cela, rendem você e o arrastam ferido para o pátio de execução.\n\nContudo, em um último momento, Mestre Yusei surge no telhado e arremessa bombas explosivas de chakra nas caldeiras. O pátio explode! Na confusão de fogo, você corta suas amarras, se joga da muralha e corre sangrando muito para a floresta negra (Perde 30 PV, ganha trauma 'Peso do Sangue').",
+        choices: [
+            { text: "Correr sangrando para a floresta negra", nextNode: "act2_forest_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 30);
+                player.traumas.push("peso_do_sangue");
+                return null;
+            }
             return { nextNode: "act2_forest_entry" };
         }
     },
@@ -280,8 +488,12 @@ const STORY_NODES = {
             { text: "Prosseguir caçando o Mutante da Névoa", nextNode: "act2_forest_hunt" }
         ],
         processAction: (text, player) => {
-            player.sanity = Math.min(100, player.sanity + 20);
-            player.mp = Math.min(player.maxMp, player.mp + 15);
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.sanity = Math.min(100, player.sanity + 20);
+                player.mp = Math.min(player.maxMp, player.mp + 15);
+                return null;
+            }
             return { nextNode: "act2_forest_hunt" };
         }
     },
@@ -294,8 +506,12 @@ const STORY_NODES = {
             { text: "Atacar as sombras em pânico em busca de saída", nextNode: "act2_forest_hallucination" }
         ],
         processAction: (text, player) => {
-            player.sanity = Math.max(0, player.sanity - 30);
-            player.traumas.push("mente_corrompida");
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.sanity = Math.max(0, player.sanity - 30);
+                player.traumas.push("mente_corrompida");
+                return null;
+            }
             return { nextNode: "act2_forest_hallucination" };
         }
     },
@@ -308,7 +524,11 @@ const STORY_NODES = {
             { text: "Forçar a caminhada até o centro da floresta", nextNode: "act2_forest_hunt" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 10);
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 10);
+                return null;
+            }
             return { nextNode: "act2_forest_hunt" };
         }
     },
@@ -316,42 +536,188 @@ const STORY_NODES = {
         background: "swamp_forest",
         speaker: "Narrador",
         dialogue: "",
-        narrative: "A névoa se condensa em uma gosma fria. Diante de você, ergue-se o Mutante de Névoa — um humanoide deformado de três metros, com a bússola do mapa cravada em seu estômago translúcido. Ele ruge, soltando bafo ácido.\n\nAs árvores com rostos se alinham ao redor, cercando o combate.",
+        narrative: "A névoa se condensa em uma gosma fria. Diante de você, ergue-se o Mutante de Névoa — um humanoide deformado de três metros com a bússola cravada no estômago translúcido. Ele ruge, exalando um vapor ácido que dissolve as folhas ao redor.\n\nAs árvores Vigilantes fecham o círculo, impedindo sua fuga direta. A criatura se prepara para saltar sobre você!",
         choices: [
-            { text: "Usar Jutsu de Fogo (Katon) nas feridas expostas dele", nextNode: "act2_mutant_katon" },
-            { text: "Avançar para desferir cortes rápidos com a Tanto", nextNode: "act2_mutant_tanto" },
+            { text: "Usar Jutsu de Fogo (Katon) para dissipar a névoa e expor o monstro", nextNode: "act2_mutant_katon" },
+            { text: "Correr pelos troncos das árvores usando acrobacias para flanqueá-lo", nextNode: "act2_mutant_tanto" },
+            { text: "Recuar desesperadamente de volta para a entrada da floresta (Fugir)", nextNode: "act2_mutant_retreat" },
+            { text: "Arriscar tudo: Avançar em ataque suicida de frente contra as mandíbulas (Sorte CD 17)", nextNode: "act2_mutant_gamble" },
             { text: "Outra resposta...", isCustom: true }
         ],
         processAction: (text, player) => {
             const clean = cleanText(text);
+            if (clean === "") return null;
             if (matches(clean, ["katon", "fogo", "chama", "jutsu"])) {
                 return { nextNode: "act2_mutant_katon" };
+            }
+            if (matches(clean, ["fugir", "recuar", "correr", "escapar"])) {
+                return { nextNode: "act2_mutant_retreat" };
+            }
+            if (matches(clean, ["arriscar", "suicida", "tudo", "sorte", "gamble"])) {
+                return { nextNode: "act2_mutant_gamble" };
             }
             return { nextNode: "act2_mutant_tanto" };
         }
     },
+    "act2_mutant_retreat": {
+        background: "swamp_forest",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O medo de morrer fala mais alto. Você dá as costas ao Mutante de Névoa e corre desesperadamente por entre os galhos espinhosos. O monstro dispara um jato de vapor ácido nas suas costas enquanto você foge (Perde 20 PV e 15 de Sanidade).\n\nVocê consegue escapar de volta para as clareiras da floresta, ofegante e humilhado.",
+        choices: [
+            { text: "Tentar se recuperar e voltar para caçar o Mutante", nextNode: "act2_forest_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                player.sanity = Math.max(0, player.sanity - 15);
+                return null;
+            }
+            return { nextNode: "act2_forest_entry" };
+        }
+    },
+    "act2_mutant_gamble": {
+        background: "swamp_forest",
+        narrative: "Ignorando qualquer cautela shinobi, você corre de frente contra as mandíbulas ácidas do monstro, confiando apenas no instinto e na sorte pura para cravar a Tanto no estômago dele.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "luck",
+                    cd: 17,
+                    successNode: "act2_mutant_success",
+                    failureNode: "act2_mutant_gamble_fail"
+                }
+            };
+        }
+    },
+    "act2_mutant_gamble_fail": {
+        background: "swamp_forest",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sua audácia foi sua ruína! O mutante te agarra no ar e te arremessa com força brutal contra uma rocha de ferro, esmagando suas costelas (Perde 50 PV). Você cai incapacitado e o monstro se prepara para te finalizar!",
+        choices: [
+            { text: "Tentar um contra-ataque desesperado no chão (Agilidade CD 14)", nextNode: "act2_mutant_strike_agility_hard" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 50);
+                return null;
+            }
+            return null;
+        }
+    },
     "act2_mutant_katon": {
         background: "swamp_forest",
-        narrative: "Você executa selos de mão e dispara uma bola de fogo focada no estômago do mutante para expor a bússola.",
+        narrative: "Você canaliza chakra nos pulmões e dispara uma bola de fogo focada. O calor evapora a névoa ácida ao redor do mutante, forçando-o a erguer os braços para proteger os olhos.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "chakraControl",
-                    cd: 12,
-                    successNode: "act2_mutant_success",
-                    failureNode: "act2_mutant_fail"
+                    cd: 11,
+                    successNode: "act2_mutant_p1_success",
+                    failureNode: "act2_mutant_p1_fail"
                 }
             };
         }
     },
     "act2_mutant_tanto": {
         background: "swamp_forest",
-        narrative: "Você usa sua agilidade shinobi para escalar as costas do monstro e desferir golpes rápidos.",
+        narrative: "Você salta velozmente de galho em galho. O monstro tenta te acompanhar com os olhos foscos, mas a sua velocidade o confunde temporariamente.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "agility",
-                    cd: 13,
+                    cd: 12,
+                    successNode: "act2_mutant_p1_success",
+                    failureNode: "act2_mutant_p1_fail"
+                }
+            };
+        }
+    },
+    "act2_mutant_p1_success": {
+        background: "swamp_forest",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Seu plano funciona! O mutante é desestabilizado e a névoa que o protegia desaparece, revelando seu núcleo azul brilhante pulsar no estômago gélido.\n\nContudo, sentindo o perigo, a criatura endurece a pele ao redor do tórax e tenta um contra-ataque desesperado com garras de gelo!",
+        choices: [
+            { text: "Desferir um golpe cirúrgico com a Tanto no núcleo (Agilidade CD 11)", nextNode: "act2_mutant_strike_agility_easy" },
+            { text: "Concentrar chakra na lâmina e desferir um corte explosivo (Controle de Chakra CD 11)", nextNode: "act2_mutant_strike_will_easy" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act2_mutant_p1_fail": {
+        background: "swamp_forest",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Seu ataque falha! O mutante antecipa seu movimento e te atinge com um sopro de vapor ácido (Perde 15 PV e 10 de Sanidade). Você rola no lodo, tossindo.\n\nEnfurecido e ciente da sua presença, o monstro avança rugindo com a carapaça blindada de gelo espesso!",
+        choices: [
+            { text: "Desferir um golpe desesperado com a Tanto no núcleo (Agilidade CD 14)", nextNode: "act2_mutant_strike_agility_hard" },
+            { text: "Forçar um corte de chakra bruto contra a blindagem (Controle de Chakra CD 14)", nextNode: "act2_mutant_strike_will_hard" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 15);
+                player.sanity = Math.max(0, player.sanity - 10);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act2_mutant_strike_agility_easy": {
+        background: "swamp_forest",
+        narrative: "Com o monstro exposto, você busca a abertura em suas garras para cravar a Tanto.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 11,
+                    successNode: "act2_mutant_success",
+                    failureNode: "act2_mutant_fail"
+                }
+            };
+        }
+    },
+    "act2_mutant_strike_will_easy": {
+        background: "swamp_forest",
+        narrative: "Você canaliza energia espiralada na ponta da Tanto para perfurar a carapaça enfraquecida.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 11,
+                    successNode: "act2_mutant_success",
+                    failureNode: "act2_mutant_fail"
+                }
+            };
+        }
+    },
+    "act2_mutant_strike_agility_hard": {
+        background: "swamp_forest",
+        narrative: "Sob a investida furiosa e blindada do mutante, você tenta escorregar por debaixo das pernas dele e golpear por trás.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 14,
+                    successNode: "act2_mutant_success",
+                    failureNode: "act2_mutant_fail"
+                }
+            };
+        }
+    },
+    "act2_mutant_strike_will_hard": {
+        background: "swamp_forest",
+        narrative: "Em uma colisão direta, você tenta romper a blindagem de gelo do mutante usando chakra bruto acumulado.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 14,
                     successNode: "act2_mutant_success",
                     failureNode: "act2_mutant_fail"
                 }
@@ -367,8 +733,12 @@ const STORY_NODES = {
             { text: "Seguir a bússola até o Pântano da Putrefação (Ato III)", nextNode: "act3_swamp_entry" }
         ],
         processAction: (text, player) => {
-            player.inventory.push("compasso_da_nevoa");
-            player.xp += 100;
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.inventory.push("compasso_da_nevoa");
+                player.xp += 100;
+                return null;
+            }
             return { nextNode: "act3_swamp_entry" };
         }
     },
@@ -381,8 +751,12 @@ const STORY_NODES = {
             { text: "Escapar para o Pântano cambaleando", nextNode: "act3_swamp_entry" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 20);
-            player.inventory.push("compasso_da_nevoa");
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                player.inventory.push("compasso_da_nevoa");
+                return null;
+            }
             return { nextNode: "act3_swamp_entry" };
         }
     },
@@ -418,6 +792,8 @@ const STORY_NODES = {
             { text: "Oferecer 30 de Vitalidade Permanente (Perde 30 de HP máximo)", nextNode: "act3_witch_vitality" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "act3_witch_eye" };
         }
     },
@@ -430,9 +806,13 @@ const STORY_NODES = {
             { text: "Beber a poção e cruzar o pântano em silêncio", nextNode: "act3_swamp_safe_cross" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 10);
-            player.traumas.push("olhar_quebrado");
-            player.inventory.push("pocao_camuflagem");
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 10);
+                player.traumas.push("olhar_quebrado");
+                player.inventory.push("pocao_camuflagem");
+                return null;
+            }
             return { nextNode: "act3_swamp_safe_cross" };
         }
     },
@@ -445,9 +825,13 @@ const STORY_NODES = {
             { text: "Beber a poção e avançar", nextNode: "act3_swamp_safe_cross" }
         ],
         processAction: (text, player) => {
-            player.maxHp = Math.max(50, player.maxHp - 30);
-            player.hp = Math.min(player.maxHp, player.hp);
-            player.inventory.push("pocao_camuflagem");
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.maxHp = Math.max(50, player.maxHp - 30);
+                player.hp = Math.min(player.maxHp, player.hp);
+                player.inventory.push("pocao_camuflagem");
+                return null;
+            }
             return { nextNode: "act3_swamp_safe_cross" };
         }
     },
@@ -460,17 +844,190 @@ const STORY_NODES = {
             { text: "Entrar no Labirinto das Ossadas (Ato IV)", nextNode: "act4_labyrinth_entry" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "act4_labyrinth_entry" };
         }
     },
     "act3_swamp_fight": {
         background: "swamp_mud",
-        narrative: "Você foca em esquivar dos tentáculos gigantes e golpear o olho do Kraken de Lama.",
+        narrative: "O Kraken de Lama emerge por completo do lodo movediço. Três tentáculos titânicos cobertos de espinhos ósseos começam a chicotear a água em sua direção com força devastadora.",
+        choices: [
+            { text: "Usar Jutsu de Terra (Doton) para erguer uma barreira e bloquear a força", nextNode: "act3_kraken_doton" },
+            { text: "Saltar entre os troncos submersos para se esquivar de forma acrobática", nextNode: "act3_kraken_dodge" },
+            { text: "Recuar de volta para as margens seguras e contornar (Fugir)", nextNode: "act3_kraken_retreat" },
+            { text: "Arriscar tudo: Se atirar sob a lama movediça para tentar cortar os tentáculos por baixo (Sorte CD 18)", nextNode: "act3_kraken_gamble" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
+            if (matches(clean, ["fugir", "recuar", "correr", "escapar"])) {
+                return { nextNode: "act3_kraken_retreat" };
+            }
+            if (matches(clean, ["arriscar", "suicida", "tudo", "sorte", "gamble"])) {
+                return { nextNode: "act3_kraken_gamble" };
+            }
+            return null;
+        }
+    },
+    "act3_kraken_retreat": {
+        background: "swamp_mud",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você desiste do combate direto. Ao tentar recuar correndo pelas margens lamacentas, um tentáculo do Kraken chicoteia suas costas, rasgando suas vestes e roubando parte de sua energia (Perde 20 PV e 20 PC).\n\nVocê consegue escapar de volta para as cabanas seguras do pântano.",
+        choices: [
+            { text: "Recuperar-se e tentar abordar o pântano novamente", nextNode: "act3_swamp_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                player.mp = Math.max(0, player.mp - 20);
+                return null;
+            }
+            return { nextNode: "act3_swamp_entry" };
+        }
+    },
+    "act3_kraken_gamble": {
+        background: "swamp_mud",
+        narrative: "Em um mergulho insano e cego na lama movediça, você afunda deliberadamente sob o lodo ácido, guiando-se apenas pela vibração do chakra para cortar os tendões centrais da criatura.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "luck",
+                    cd: 18,
+                    successNode: "act3_fight_success",
+                    failureNode: "act3_kraken_gamble_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_gamble_fail": {
+        background: "swamp_mud",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sua jogada foi um desastre! A lama ácida preenche seus pulmões e você começa a se afogar, sendo violentamente esmagado pelos tentáculos sob a água turva (Perde 55 PV). Você é cuspido quase inconsciente na margem lamacenta, com o Kraken avançando!",
+        choices: [
+            { text: "Tentar uma estocada desesperada com a Tanto na força pura (Força CD 15)", nextNode: "act3_kraken_strike_hard_str" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 55);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act3_kraken_doton": {
+        background: "swamp_mud",
+        narrative: "Você canaliza chakra de terra nas solas dos pés e ergue uma parede compacta de lama endurecida para absorver o impacto dos tentáculos.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 12,
+                    successNode: "act3_kraken_p1_success",
+                    failureNode: "act3_kraken_p1_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_dodge": {
+        background: "swamp_mud",
+        narrative: "Você usa reflexos shinobis puros, saltando de raiz em raiz sobre o lodo movediço no momento exato do impacto das chicotadas.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 13,
+                    successNode: "act3_kraken_p1_success",
+                    failureNode: "act3_kraken_p1_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_p1_success": {
+        background: "swamp_mud",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Defesa perfeita! Os tentáculos colidem contra o obstáculo levantando lama ácida. Sob a água turva, você avista o imenso olho central dourado do Kraken exposto e indefeso.\n\nÉ a sua chance de atacá-lo antes que ele se oculte novamente!",
+        choices: [
+            { text: "Imbuir Raiton (Raio) na Tanto e perfurar o olho central (Controle de Chakra CD 12)", nextNode: "act3_kraken_strike_easy_will" },
+            { text: "Executar um corte de força brutal na base dos tentáculos (Força CD 12)", nextNode: "act3_kraken_strike_easy_str" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act3_kraken_p1_fail": {
+        background: "swamp_mud",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você é atingido! Um tentáculo arrebenta sua posição e o arremessa na lama movediça (Perde 20 PV). O Kraken ruge e cobre o próprio corpo sob uma densa couraça de lama ácida espessa.\n\nMesmo ferido e sob forte pressão, você tenta desferir um golpe desesperado para escapar!",
+        choices: [
+            { text: "Perfurar a couraça de lama usando chakra acumulado na Tanto (Controle de Chakra CD 15)", nextNode: "act3_kraken_strike_hard_will" },
+            { text: "Romper a couraça usando força física e determinação pura (Força CD 15)", nextNode: "act3_kraken_strike_hard_str" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act3_kraken_strike_easy_will": {
+        background: "swamp_mud",
+        narrative: "Você energiza sua Tanto de ferro com descargas elétricas e salta em direção ao olho central exposto da besta.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 12,
+                    successNode: "act3_fight_success",
+                    failureNode: "act3_fight_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_strike_easy_str": {
+        background: "swamp_mud",
+        narrative: "Você segura a lâmina com as duas mãos e descarrega um golpe de força física pura nos tendões dos tentáculos da besta.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "strength",
-                    cd: 14,
+                    cd: 12,
+                    successNode: "act3_fight_success",
+                    failureNode: "act3_fight_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_strike_hard_will": {
+        background: "swamp_mud",
+        narrative: "Coberto de lama ácida e com a visão truvar, você tenta focar sua mente para explodir o chakra da Tanto diretamente na couraça do monstro.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 15,
+                    successNode: "act3_fight_success",
+                    failureNode: "act3_fight_fail"
+                }
+            };
+        }
+    },
+    "act3_kraken_strike_hard_str": {
+        background: "swamp_mud",
+        narrative: "Com os pulmões queimando e sob o abraço viscoso da lama movediça, você tenta desferir um corte de força absoluta contra a couraça.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "strength",
+                    cd: 15,
                     successNode: "act3_fight_success",
                     failureNode: "act3_fight_fail"
                 }
@@ -486,7 +1043,11 @@ const STORY_NODES = {
             { text: "Avançar até as escadas do labirinto", nextNode: "act4_labyrinth_entry" }
         ],
         processAction: (text, player) => {
-            player.xp += 150;
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.xp += 150;
+                return null;
+            }
             return { nextNode: "act4_labyrinth_entry" };
         }
     },
@@ -499,7 +1060,11 @@ const STORY_NODES = {
             { text: "Arrastar-se para o labirinto nas rochas", nextNode: "act4_labyrinth_entry" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 35);
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 35);
+                return null;
+            }
             return { nextNode: "act4_labyrinth_entry" };
         }
     },
@@ -509,10 +1074,12 @@ const STORY_NODES = {
         background: "sleeping_dragon",
         speaker: "Narrador",
         dialogue: "",
-        narrative: "As catacumbas revelam o antigo Labirinto das Ossadas. Paredes de rocha negra obsidiana se movem com ruídos mecânicos, mudando o trajeto a cada minuto. O calor é infernal.\n\nNo centro da arena circular, repousa o colossal Dragão de Obsidiana (Veldrak). Seus olhos ardem como carvão e suas escamas gotejam lava avermelhada. Ele ruge, cuspindo chamas de fogo negro que ameaçam queimar sua própria alma.",
+        narrative: "As catacumbas revelam o antigo Labirinto das Ossadas. Paredes de rocha negra obsidiana se movem com ruídos mecânicos, mudando o trajeto a cada minuto. O calor é infernal.\n\nNo centro da arena circular, repousa o colossal Dragão de Obsidiana (Veldrak). Seus olhos ardem como carvão e suas escamas gotejam lava avermelhada. Ele ruge, cuspindo chamas de fogo negro que ameaçam queimar sua própria alma. A criatura está totalmente revestida por um escudo de magma fervente!",
         choices: [
-            { text: "Usar Jutsu de Água (Suiton) para resfriar as escamas dele", nextNode: "act4_dragon_suiton" },
-            { text: "Usar furtividade para golpear o coração de lava sob o peito dele", nextNode: "act4_dragon_stealth" },
+            { text: "Usar Jutsu de Água (Suiton) para resfriar a armadura de lava dele", nextNode: "act4_dragon_suiton" },
+            { text: "Lançar shurikens explosivas na garganta dele quando ele abrir a boca", nextNode: "act4_dragon_shuriken" },
+            { text: "Fugir correndo de volta para os túneis estreitos do labirinto (Recuar)", nextNode: "act4_dragon_retreat" },
+            { text: "Arriscar tudo: Saltar do teto do labirinto em queda livre na Tanto diretamente sobre a cabeça do dragão (Sorte CD 18)", nextNode: "act4_dragon_gamble" },
             { text: "Outra resposta...", isCustom: true }
         ],
         processAction: (text, player) => {
@@ -521,30 +1088,259 @@ const STORY_NODES = {
             if (matches(clean, ["suiton", "agua", "gelo", "resfriar", "jutsu"])) {
                 return { nextNode: "act4_dragon_suiton" };
             }
-            return { nextNode: "act4_dragon_stealth" };
+            if (matches(clean, ["fugir", "recuar", "correr", "escapar"])) {
+                return { nextNode: "act4_dragon_retreat" };
+            }
+            if (matches(clean, ["arriscar", "suicida", "tudo", "sorte", "gamble"])) {
+                return { nextNode: "act4_dragon_gamble" };
+            }
+            return { nextNode: "act4_dragon_shuriken" };
+        }
+    },
+    "act4_dragon_retreat": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você decide que não está pronto. Ao dar as costas e disparar em direção aos túneis, Veldrak solta um rugido e bate sua cauda espinhosa contra a entrada. Pedras de obsidiana caem e te atingem nas costas (Perde 30 PV).\n\nVocê consegue escapar de volta para as passagens externas do labirinto, seriamente machucado.",
+        choices: [
+            { text: "Recuperar o fôlego e voltar para a arena do dragão", nextNode: "act4_labyrinth_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 30);
+                return null;
+            }
+            return { nextNode: "act4_labyrinth_entry" };
+        }
+    },
+    "act4_dragon_gamble": {
+        background: "sleeping_dragon",
+        narrative: "Com coragem insana, você escala as colunas de obsidiana até o teto abobadado e se lança em queda livre de cabeça para baixo, apontando a Tanto diretamente para as narinas incandescentes do dragão.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "luck",
+                    cd: 18,
+                    successNode: "act4_dragon_success",
+                    failureNode: "act4_dragon_gamble_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_gamble_fail": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Tentativa trágica! O dragão percebe sua sombra caindo, gira e te atinge no ar com uma patada massiva que te joga contra o chão de rocha (Perde 60 PV). Suas costelas estalam e você mal consegue se mexer sob as garras dele!",
+        choices: [
+            { text: "Tentar desferir um golpe desesperado na força física pura (Força CD 14)", nextNode: "act4_dragon_strike_hard_str" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 60);
+                return null;
+            }
+            return null;
         }
     },
     "act4_dragon_suiton": {
         background: "sleeping_dragon",
-        narrative: "Você faz os selos de mão e dispara uma torrente de água fria contra as escamas de lava do dragão.",
+        narrative: "Você executa selos de mão e dispara uma torrente de água fria contra as escamas de lava do dragão para provocar um choque térmico.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "chakraControl",
+                    cd: 11,
+                    successNode: "act4_dragon_p1_success",
+                    failureNode: "act4_dragon_p1_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_shuriken": {
+        background: "sleeping_dragon",
+        narrative: "Você espera Veldrak acumular fogo negro na boca e arremessa duas shurikens com selos explosivos diretamente na garganta exposta.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "perception",
                     cd: 12,
+                    successNode: "act4_dragon_p1_success",
+                    failureNode: "act4_dragon_p1_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_p1_success": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sucesso! A armadura de lava de Veldrak estala e solidifica em rocha quebradiça, deixando as asas expostas. O monstro solta um guincho de dor.\n\nEnfurecido pelo resfriamento, o dragão bate as asas gigantes e decola, iniciando um voo rasante para varrer a arena com chamas negras!",
+        choices: [
+            { text: "Usar Jutsu de Substituição (Kawarimi) nos destroços de obsidiana (Agilidade CD 11)", nextNode: "act4_dragon_p2_dodge_easy" },
+            { text: "Ocultar seu calor corporal e chakra sob uma fenda na rocha (Controle de Chakra CD 11)", nextNode: "act4_dragon_p2_hide_easy" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act4_dragon_p1_fail": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O ataque falha! O calor de Veldrak evapora as shurikens/água antes de tocarem a pele dele. Uma onda de choque térmico te atinge (Perde 15 PV).\n\nO dragão ruge e ergue voo com a couraça de magma ainda ativa, mergulhando na sua direção para te esmagar com as garras incandescentes!",
+        choices: [
+            { text: "Usar Jutsu de Substituição em desespero absoluto (Agilidade CD 14)", nextNode: "act4_dragon_p2_dodge_hard" },
+            { text: "Criar uma barreira de chakra de emergência para conter o mergulho (Controle de Chakra CD 14)", nextNode: "act4_dragon_p2_hide_hard" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 15);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act4_dragon_p2_dodge_easy": {
+        background: "sleeping_dragon",
+        narrative: "Você faz uma troca rápida com uma estátua de rocha quebrada enquanto o sopro de fogo passa carbonizando tudo.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 11,
+                    successNode: "act4_dragon_p2_success",
+                    failureNode: "act4_dragon_p2_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_p2_hide_easy": {
+        background: "sleeping_dragon",
+        narrative: "Você suprime seus batimentos e chakra sob as pedras frias, fazendo o dragão errar o alvo da varredura.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 11,
+                    successNode: "act4_dragon_p2_success",
+                    failureNode: "act4_dragon_p2_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_p2_dodge_hard": {
+        background: "sleeping_dragon",
+        narrative: "Sob o mergulho pesado e escaldante do dragão, você tenta rolar no limite do reflexo para evitar ser esmagado.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 14,
+                    successNode: "act4_dragon_p2_success",
+                    failureNode: "act4_dragon_p2_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_p2_hide_hard": {
+        background: "sleeping_dragon",
+        narrative: "Com as chamas vindo direto na sua direção, você canaliza todo o chakra para criar um casulo de resistência pura.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 14,
+                    successNode: "act4_dragon_p2_success",
+                    failureNode: "act4_dragon_p2_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_p2_success": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Evitação limpa! O dragão pousa pesadamente no centro, bufando fumaça cinzenta pelas narinas. Ele está temporariamente lento e vulnerável, com o núcleo de magma do peito exposto e brilhando.\n\nÉ o momento de desferir o golpe decisivo!",
+        choices: [
+            { text: "Correr e enfiar a Tanto diretamente no núcleo de lava (Agilidade CD 11)", nextNode: "act4_dragon_strike_easy_agi" },
+            { text: "Canalizar um golpe de força física bruta para perfurar o peito (Força CD 11)", nextNode: "act4_dragon_strike_easy_str" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act4_dragon_p2_fail": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você sofre graves queimaduras de fogo negro! (Perde 20 PV e 15 de Sanidade). Suas vestes queimam e você cai de joelhos.\n\nO dragão aterrissa na sua frente, com as mandíbulas abertas prontas para te devorar. Você precisa desferir um golpe de vida ou morte!",
+        choices: [
+            { text: "Atacar o peito da besta no limite do seu reflexo (Agilidade CD 14)", nextNode: "act4_dragon_strike_hard_agi" },
+            { text: "Reunir todas as suas forças para resistir e golpear (Força CD 14)", nextNode: "act4_dragon_strike_hard_str" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                player.sanity = Math.max(0, player.sanity - 15);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act4_dragon_strike_easy_agi": {
+        background: "sleeping_dragon",
+        narrative: "Você corre com velocidade, saltando sobre as rochas para enterrar a Tanto no coração do dragão.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 11,
                     successNode: "act4_dragon_success",
                     failureNode: "act4_dragon_fail"
                 }
             };
         }
     },
-    "act4_dragon_stealth": {
+    "act4_dragon_strike_easy_str": {
         background: "sleeping_dragon",
-        narrative: "Você espera a fumaça das chamas negras subir e tenta escorregar silenciosamente sob a carapaça dele.",
+        narrative: "Você empunha a lâmina de ferro e desfere um golpe vertical para quebrar o peito enfraquecido do dragão.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "strength",
+                    cd: 11,
+                    successNode: "act4_dragon_success",
+                    failureNode: "act4_dragon_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_strike_hard_agi": {
+        background: "sleeping_dragon",
+        narrative: "Sob o olhar de morte de Veldrak, você tenta rolar entre os dentes dele e cravar a faca no peito blindado.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "agility",
+                    cd: 14,
+                    successNode: "act4_dragon_success",
+                    failureNode: "act4_dragon_fail"
+                }
+            };
+        }
+    },
+    "act4_dragon_strike_hard_str": {
+        background: "sleeping_dragon",
+        narrative: "Ignorando as chamas que queimam sua pele, você avança como um martelo físico para quebrar a carapaça de obsidiana.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "strength",
                     cd: 14,
                     successNode: "act4_dragon_success",
                     failureNode: "act4_dragon_fail"
@@ -561,8 +1357,12 @@ const STORY_NODES = {
             { text: "Entrar no templo da Fortaleza de Obsidiana (Ato V)", nextNode: "act5_fortress_entry" }
         ],
         processAction: (text, player) => {
-            player.inventory.push("coracao_obsidiana");
-            player.xp += 200;
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.inventory.push("coracao_obsidiana");
+                player.xp += 200;
+                return null;
+            }
             return { nextNode: "act5_fortress_entry" };
         }
     },
@@ -575,9 +1375,13 @@ const STORY_NODES = {
             { text: "Subir as escadarias da Fortaleza cambaleando", nextNode: "act5_fortress_entry" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 20);
-            player.mp = Math.max(0, player.mp - 30);
-            player.inventory.push("coracao_obsidiana");
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                player.mp = Math.max(0, player.mp - 30);
+                player.inventory.push("coracao_obsidiana");
+                return null;
+            }
             return { nextNode: "act5_fortress_entry" };
         }
     },
@@ -587,10 +1391,12 @@ const STORY_NODES = {
         background: "temple_interior",
         speaker: "Narrador",
         dialogue: "",
-        narrative: "A Catedral de Ferro do Templo Central ergue-se com colunas góticas e cristais roxos que brilham nas paredes. No altar, a **Lágrima do Renascimento** flutua sob um invólucro mágico.\n\nO Alto Inquisidor da ditadura surge do trono, desembainhando uma espada de ferro maciço:\n\n— Kenji! O verme imundo que roubou os cofres do Soberano! Aqui jaz Sayuri de pedra, e aqui você virará cinzas!",
+        narrative: "A Catedral de Ferro do Templo Central ergue-se com colunas góticas e cristais roxos que brilham nas paredes. No altar, a **Lágrima do Renascimento** flutua sob um invólucro mágico.\n\nO Alto Inquisidor da ditadura surge do trono, desembainhando uma espada de ferro maciço:\n\n— Kenji! O verme imundo que roubou os cofres do Soberano! Aqui jaz Sayuri de pedra, e aqui você virará cinzas! O Inquisidor ataca desferindo um corte de vento cortante devastador!",
         choices: [
-            { text: "Atacar usando Clones de Sombra (Kage Bunshin) e Furtividade", nextNode: "act5_inquisitor_clones" },
-            { text: "Desperadamente tentar usar a Maldição da Medusa (Braço de Pedra) contra ele", nextNode: "act5_inquisitor_curse" },
+            { text: "Dividir seu chakra em Clones de Sombra (Kage Bunshin) para flanqueá-lo", nextNode: "act5_inquisitor_clones" },
+            { text: "Erguer um escudo de chakra puro (Chakra Shield) para absorver o corte", nextNode: "act5_inquisitor_shield" },
+            { text: "Recuar correndo pelas escadarias para se reorganizar (Fugir)", nextNode: "act5_inquisitor_retreat" },
+            { text: "Arriscar tudo: Entregar-se voluntariamente à espada dele para desferir um golpe fatal (Sorte CD 17)", nextNode: "act5_inquisitor_gamble" },
             { text: "Outra resposta...", isCustom: true }
         ],
         processAction: (text, player) => {
@@ -599,31 +1405,262 @@ const STORY_NODES = {
             if (matches(clean, ["curse", "maldicao", "braco", "pedra", "medusa"])) {
                 return { nextNode: "act5_inquisitor_curse" };
             }
+            if (matches(clean, ["fugir", "recuar", "correr", "escapar"])) {
+                return { nextNode: "act5_inquisitor_retreat" };
+            }
+            if (matches(clean, ["arriscar", "suicida", "tudo", "sorte", "gamble"])) {
+                return { nextNode: "act5_inquisitor_gamble" };
+            }
             return { nextNode: "act5_inquisitor_clones" };
+        }
+    },
+    "act5_inquisitor_retreat": {
+        background: "temple_interior",
+        speaker: "Alto Inquisidor",
+        emotion: "Raiva",
+        dialogue: "Fugir agora, Kenji? Não há escapatória deste santuário!",
+        narrative: "Ao tentar correr em direção às portas de ferro da catedral, o Inquisidor ergue a mão e dispara estacas de ferro mágico em suas costas (Perde 30 PV e 20 PC). Você desaba nas escadas da entrada da Fortaleza, forçado a lutar novamente.",
+        choices: [
+            { text: "Levantar-se e confrontá-lo novamente", nextNode: "act5_fortress_entry" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 30);
+                player.mp = Math.max(0, player.mp - 20);
+                return null;
+            }
+            return { nextNode: "act5_fortress_entry" };
+        }
+    },
+    "act5_inquisitor_gamble": {
+        background: "temple_interior",
+        narrative: "Em um ato de loucura deliberada, você abaixa completamente sua guarda e avança de peito aberto contra o corte de ferro dele, apostando na sorte pura de que o golpe dele não atinja nenhum órgão vital antes que você o trespasse.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "luck",
+                    cd: 17,
+                    successNode: "act5_inquisitor_success",
+                    failureNode: "act5_inquisitor_gamble_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_gamble_fail": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sua aposta falha terrivelmente! A grande espada de ferro do inquisidor atravessa seu estômago com violência (Perde 65 PV). Você cai de joelhos cuspindo sangue, com o inquisidor puxando a lâmina para te decepar!",
+        choices: [
+            { text: "Tentar uma estocada cega com o resto do seu chakra (Controle de Chakra CD 14)", nextNode: "act5_inquisitor_finish_hard_will" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 65);
+                return null;
+            }
+            return null;
         }
     },
     "act5_inquisitor_clones": {
         background: "temple_interior",
-        narrative: "Você divide seu chakra criando três clones de ilusão para confundir os ataques pesados dele.",
+        narrative: "Você projeta três ilusões idênticas que correm em direções opostas pelas colunas de ferro, tentando confundir os ataques pesados dele.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 11,
+                    successNode: "act5_inquisitor_p1_success",
+                    failureNode: "act5_inquisitor_p1_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_shield": {
+        background: "temple_interior",
+        narrative: "Você firma os pés no chão gótico e projeta uma barreira translúcida de chakra comprimido para parar a lâmina do inquisidor.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 12,
+                    successNode: "act5_inquisitor_p1_success",
+                    failureNode: "act5_inquisitor_p1_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_p1_success": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Defesa perfeita! O Inquisidor atinge o clone/barreira deixando a guarda exposta por um curto período. Suas colunas góticas estremecem.\n\nPercebendo a brecha, ele recua rapidamente e envolve sua grande espada em raios de chakra elétrico escuro que drenam energia espiritual!",
+        choices: [
+            { text: "Usar a maldição de pedra do seu braço (Braço de Pedra) para parar a lâmina (Controle de Chakra CD 12)", nextNode: "act5_inquisitor_p2_curse_easy" },
+            { text: "Efetuar esquivas acrobatas em zigue-zague para driblar o corte (Agilidade CD 12)", nextNode: "act5_inquisitor_p2_dodge_easy" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act5_inquisitor_p1_fail": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Você é atingido! O golpe pesado de vento corta seu ombro (Perde 20 PV). Você cai no chão de pedra, sangrando.\n\nO Inquisidor não te dá tempo de respirar e ergue a grande lâmina carregada de chakra elétrico roxo para desferir um corte decapante!",
+        choices: [
+            { text: "Aparar a lâmina usando o braço amaldiçoado petrificado (Controle de Chakra CD 15)", nextNode: "act5_inquisitor_p2_curse_hard" },
+            { text: "Rolar no chão em desespero absoluto para evitar o corte (Agilidade CD 15)", nextNode: "act5_inquisitor_p2_dodge_hard" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 20);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act5_inquisitor_p2_curse_easy": {
+        background: "temple_interior",
+        narrative: "Você endurece seu braço esquerdo em pedra negra de obsidiana e bloqueia o corte elétrico com faíscas roxas estridentes.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 12,
+                    successNode: "act5_inquisitor_p2_success",
+                    failureNode: "act5_inquisitor_p2_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_p2_dodge_easy": {
+        background: "temple_interior",
+        narrative: "Você salta rente ao chão usando a agilidade shinobi para deslizar por baixo da trajetória da lâmina elétrica.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "agility",
                     cd: 12,
+                    successNode: "act5_inquisitor_p2_success",
+                    failureNode: "act5_inquisitor_p2_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_p2_curse_hard": {
+        background: "temple_interior",
+        narrative: "Ferido e sem forças, você tenta concentrar o resto da maldição no seu braço para parar o golpe fulminante diretamente.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 15,
+                    successNode: "act5_inquisitor_p2_success",
+                    failureNode: "act5_inquisitor_p2_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_p2_dodge_hard": {
+        background: "temple_interior",
+        narrative: "Sob a iminência da lâmina, você tenta girar o corpo no lodo de sangue e rolar para fora da trajetória do corte.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 15,
+                    successNode: "act5_inquisitor_p2_success",
+                    failureNode: "act5_inquisitor_p2_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_p2_success": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Sucesso! O Inquisidor está exausto e cambaleia para trás, ofegante. O canal de chakra elétrico dele se quebra, deixando seu coração desprotegido.\n\nÉ o golpe final da sua redenção shinobi!",
+        choices: [
+            { text: "Canalizar toda a sua determinação e chakra na Tanto para um contra-ataque de perfuração (Controle de Chakra CD 11)", nextNode: "act5_inquisitor_finish_easy_will" },
+            { text: "Executar uma investida rápida de corte no pescoço (Agilidade CD 11)", nextNode: "act5_inquisitor_finish_easy_agi" }
+        ],
+        processAction: (text, player) => {
+            return null;
+        }
+    },
+    "act5_inquisitor_p2_fail": {
+        background: "temple_interior",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "O corte te atinge e consome suas energias espirituais! (Perde 25 PC e 15 PV). Suas veias ardem de dor.\n\nO Inquisidor avança para finalizar o combate, rindo com escárnio. Você precisa tentar um último contra-ataque desesperado!",
+        choices: [
+            { text: "Focar seu último fôlego de chakra para uma investida de perfuração (Controle de Chakra CD 14)", nextNode: "act5_inquisitor_finish_hard_will" },
+            { text: "Tentar atingi-lo jogando uma bomba de fumaça e veneno para golpear por trás (Agilidade CD 14)", nextNode: "act5_inquisitor_finish_hard_agi" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 15);
+                player.mp = Math.max(0, player.mp - 25);
+                return null;
+            }
+            return null;
+        }
+    },
+    "act5_inquisitor_finish_easy_will": {
+        background: "temple_interior",
+        narrative: "Você projeta uma lâmina de chakra azul na ponta da Tanto e corre contra o Inquisidor.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "chakraControl",
+                    cd: 11,
                     successNode: "act5_inquisitor_success",
                     failureNode: "act5_inquisitor_fail"
                 }
             };
         }
     },
-    "act5_inquisitor_curse": {
+    "act5_inquisitor_finish_easy_agi": {
         background: "temple_interior",
-        narrative: "Você libera as escamas de pedra do seu próprio braço cursado, tentando petrificar a armadura do inquisidor.",
+        narrative: "Você corre furtivamente pelas sombras das colunas e ataca com cortes precisos pelas costas dele.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 11,
+                    successNode: "act5_inquisitor_success",
+                    failureNode: "act5_inquisitor_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_finish_hard_will": {
+        background: "temple_interior",
+        narrative: "Sob extrema dor e quase sem forças, você foca todo o seu ser na lâmina para atravessar a armadura do inquisidor.",
         processAction: (text, player) => {
             return {
                 rollRequired: {
                     attribute: "chakraControl",
-                    cd: 13,
+                    cd: 14,
+                    successNode: "act5_inquisitor_success",
+                    failureNode: "act5_inquisitor_fail"
+                }
+            };
+        }
+    },
+    "act5_inquisitor_finish_hard_agi": {
+        background: "temple_interior",
+        narrative: "Com a visão escurecendo, você joga a bomba de fumaça ácida no rosto dele e avança para um último corte cego.",
+        processAction: (text, player) => {
+            return {
+                rollRequired: {
+                    attribute: "agility",
+                    cd: 14,
                     successNode: "act5_inquisitor_success",
                     failureNode: "act5_inquisitor_fail"
                 }
@@ -640,6 +1677,8 @@ const STORY_NODES = {
             { text: "Usar a Lágrima em Sayuri (Final)", nextNode: "act5_ending_choice" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "act5_ending_choice" };
         }
     },
@@ -652,7 +1691,11 @@ const STORY_NODES = {
             { text: "Pegar a poção de renascimento (Final)", nextNode: "act5_ending_choice" }
         ],
         processAction: (text, player) => {
-            player.hp = Math.max(1, player.hp - 30);
+            const clean = cleanText(text);
+            if (clean === "") {
+                player.hp = Math.max(0, player.hp - 30);
+                return null;
+            }
             return { nextNode: "act5_ending_choice" };
         }
     },
@@ -668,6 +1711,7 @@ const STORY_NODES = {
         ],
         processAction: (text, player) => {
             const clean = cleanText(text);
+            if (clean === "") return null;
             if (matches(clean, ["sacrificio", "estatua", "pedra", "morrer"])) {
                 return { nextNode: "ending_stone_sacrifice" };
             }
@@ -688,6 +1732,8 @@ const STORY_NODES = {
             { text: "Retornar ao Menu Principal", nextNode: "prologue_reset" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "prologue_reset" };
         }
     },
@@ -700,6 +1746,8 @@ const STORY_NODES = {
             { text: "Retornar ao Menu Principal", nextNode: "prologue_reset" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "prologue_reset" };
         }
     },
@@ -712,10 +1760,27 @@ const STORY_NODES = {
             { text: "Retornar ao Menu Principal", nextNode: "prologue_reset" }
         ],
         processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
             return { nextNode: "prologue_reset" };
         }
     },
 
+    "game_over_death": {
+        background: "sleeping_dragon",
+        speaker: "Narrador",
+        dialogue: "",
+        narrative: "Seus ferimentos foram fatais. Suas vistas escurecem e o frio da morte consome seu último sopro de vida. A imagem de Sayuri de pedra desaparece sob seus olhos turvos...\n\nSua jornada shinobi terminou precocemente nas sombras de Kagegahara.",
+        choices: [
+            { text: "Reiniciar Jornada (Menu Principal)", nextNode: "prologue_reset" }
+        ],
+        processAction: (text, player) => {
+            const clean = cleanText(text);
+            if (clean === "") return null;
+            return { nextNode: "prologue_reset" };
+        }
+    },
+    
     "prologue_reset": {
         narrative: "Retornando ao menu principal...",
         processAction: (text, player) => {
@@ -1125,11 +2190,8 @@ class RPGGameController {
 
         btnRollOverlay.addEventListener('click', () => {
             try {
-                // Alerta inicial de diagnóstico
-                alert("Dado clicado! activeRoll: " + (this.activeRoll ? JSON.stringify(this.activeRoll) : "null"));
-
                 if (!this.activeRoll) {
-                    alert("Erro: Nenhuma rolagem ativa configurada no controlador!");
+                    console.error("Erro: Nenhuma rolagem ativa configurada no controlador!");
                     return;
                 }
 
@@ -1152,16 +2214,25 @@ class RPGGameController {
                                 this.activeRoll = null;
                                 this.transitionToNode(targetNode);
                             } catch (errInnerInner) {
-                                alert("Erro ao aplicar transição de nó: " + errInnerInner.message + "\nPilha:\n" + errInnerInner.stack);
+                                console.error("Erro ao aplicar transição de nó:", errInnerInner);
                             }
                         }, 1500);
                     } catch (errInner) {
-                        alert("Erro ao processar dados da rolagem: " + errInner.message + "\nPilha:\n" + errInner.stack);
+                        console.error("Erro ao processar dados da rolagem:", errInner);
                     }
 
                 }, 1000);
             } catch (errOuter) {
-                alert("Erro catastrófico no clique do D20: " + errOuter.message + "\nPilha:\n" + errOuter.stack);
+                console.error("Erro catastrófico no clique do D20:", errOuter);
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            const overlay = document.getElementById('flashlight-overlay');
+            if (overlay && overlay.style.display !== 'none') {
+                const x = e.clientX;
+                const y = e.clientY;
+                overlay.style.background = `radial-gradient(circle 200px at ${x}px ${y}px, transparent 0%, rgba(5, 2, 8, 0.96) 100%)`;
             }
         });
     }
@@ -1237,6 +2308,9 @@ class RPGGameController {
 
     transitionToNode(nodeId) {
         try {
+            if (this.player.hp <= 0 && nodeId !== "game_over_death" && nodeId !== "prologue_reset") {
+                nodeId = "game_over_death";
+            }
             this.currentNodeId = nodeId;
             const node = STORY_NODES[nodeId];
             if (!node) {
@@ -1264,6 +2338,29 @@ class RPGGameController {
                 nodeId === "act5_inquisitor_fail") {
                 this.triggerCameraEffect("camera-flash");
                 this.triggerCameraEffect("camera-shake");
+            }
+
+            // Toggle do Efeito Lanterna e Contador de Pânico
+            const overlay = document.getElementById('flashlight-overlay');
+            if (overlay) {
+                const isDarkArea = nodeId.startsWith("act2_forest") || nodeId.startsWith("act4_labyrinth") || this.player.sanity < 40;
+                if (isDarkArea && nodeId !== "prologue_entry" && nodeId !== "game_over_death" && nodeId !== "prologue_reset") {
+                    overlay.style.display = "block";
+                } else {
+                    overlay.style.display = "none";
+                }
+            }
+
+            const panicBar = document.getElementById('kagegahara-panic-bar');
+            if (panicBar) {
+                const isEclipse = nodeId.startsWith("act4") || nodeId.startsWith("act5") || this.player.sanity < 50;
+                if (isEclipse && nodeId !== "prologue_entry" && nodeId !== "game_over_death" && nodeId !== "prologue_reset") {
+                    panicBar.style.display = "block";
+                    const panicVal = 100 - this.player.sanity;
+                    document.getElementById('panic-percent').textContent = panicVal;
+                } else {
+                    panicBar.style.display = "none";
+                }
             }
 
             this.saveGame();
@@ -1338,7 +2435,19 @@ class RPGGameController {
             dialogText.style.display = "none";
         }
 
-        document.getElementById('vn-narrative-text').textContent = node.narrative || "";
+        let narrative = node.narrative || "";
+        if (this.player.sanity < 45 && this.currentNodeId !== "prologue_entry") {
+            const words = narrative.split(" ");
+            const corruptCount = Math.floor(words.length * 0.15);
+            for (let i = 0; i < corruptCount; i++) {
+                const idx = Math.floor(Math.random() * words.length);
+                if (words[idx] && !words[idx].includes("<span") && words[idx].length > 1) {
+                    words[idx] = `<span class="glitch-corrupt">${words[idx]}</span>`;
+                }
+            }
+            narrative = words.join(" ");
+        }
+        document.getElementById('vn-narrative-text').innerHTML = narrative;
 
         // Renderizar Escolhas Compactas
         this.renderChoices(node.choices);
@@ -1510,3 +2619,4 @@ document.addEventListener("DOMContentLoaded", () => {
     const game = new RPGGameController();
     game.init();
 });
+

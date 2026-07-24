@@ -1041,3 +1041,56 @@
     box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
 }
 
+
+
+/* EFEITO LANTERNA SOBRE O GAME VIEWPORT DO KAGEGAHARA */
+#flashlight-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none; /* Permite clicar nos botões do Kagegahara normalmente */
+    background: radial-gradient(
+        circle 200px at 50% 50%,
+        transparent 0%,
+        rgba(5, 2, 8, 0.96) 100%
+    );
+    z-index: 9000;
+    transition: background 0.05s ease;
+}
+
+/* EFEITO GLITCH DE SANIDADE PARA O TEXTO DA HISTÓRIA */
+.glitch-corrupt {
+    color: #ff3344 !important;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
+    animation: textGlitch 1.2s infinite;
+    cursor: pointer;
+}
+
+@keyframes textGlitch {
+    0% { transform: translate(0); }
+    25% { transform: translate(-2px, 1px); }
+    50% { transform: translate(1px, -1px); }
+    75% { transform: translate(-1px, 2px); }
+    100% { transform: translate(0); }
+}
+
+/* PAINEL DE CONTADOR DE PÂNICO NO ECLIPSE */
+#kagegahara-panic-bar {
+    display: none;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 0, 0, 0.85);
+    border: 1px solid #ff2233;
+    color: #ff4444;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-family: 'Jura', sans-serif;
+    font-weight: bold;
+    letter-spacing: 2px;
+    z-index: 9999;
+}
